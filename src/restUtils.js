@@ -12,7 +12,7 @@ const headers = () => {
 
     let token = store.getters.token;
     if (token)
-        Object.assign(headers.headers, {Authorization: token});
+        Object.assign(headers.headers, {Authorization: 'bearer ' + token});
 
     return headers;
 };

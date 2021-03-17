@@ -15,9 +15,38 @@ export default {
     },
 
     actions: {
-        login({commit}, user) {
-            commit('AUTH_SUCCESS', user);
+        login({commit}, token) {
+            commit('AUTH_SUCCESS', token);
             router.push({name: 'Main'});
+        },
+
+        async getGoogleLoginHref() {
+            try {
+                let href = await rest.doGet(`/login`);
+                return {
+                    success: true,
+                    data: href
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    data: error.response.data
+                }
+            }
+        },
+
+        async getGoogleAccessToken({commit}, token) {
+            try {
+                let tokenData = await rest.doPost(`/login`, token);
+                commit('AUTH_SUCCESS', tokenData);
+                let userInfo = await rest.doGet("/user");
+                commit('SET_USER_NAME', userInfo);
+            } catch (error) {
+                return {
+                    success: false,
+                    data: error.response.data
+                }
+            }
         },
 
         async authorization({commit, dispatch}, user) {
@@ -49,8 +78,8 @@ export default {
                 authenticated = await dispatch('loadCurrentUserData');
             }
             return !!authenticated;*/
-            let nameFromStorage = localStorage.getItem(constants.SESSION_STORAGE_NAME);
-            return !!nameFromStorage;
+            let tokenFromStorage = localStorage.getItem(constants.SESSION_STORAGE_TOKEN);
+            return !!tokenFromStorage;
         },
 
 
@@ -76,15 +105,20 @@ export default {
     },
 
     mutations: {
-        AUTH_SUCCESS(state, user) {
+        AUTH_SUCCESS(state, token) {
             //state.token = user.token;
-            state.user = user;
-            localStorage.setItem(constants.SESSION_STORAGE_NAME, user.name);
+            state.token = token;
+            localStorage.setItem(constants.SESSION_STORAGE_TOKEN, token);
+        },
+
+        SET_USER_NAME(state, username) {
+            state.user.name = username;
+            localStorage.setItem(constants.SESSION_STORAGE_NAME, username);
         },
 
         LOGOUT(state) {
-            state.user = Object.assign({}, emptyUser);
-            localStorage.removeItem(constants.SESSION_STORAGE_NAME);
+            state.token = '';
+            localStorage.removeItem(constants.SESSION_STORAGE_TOKEN);
         },
 
         LOAD_USER_DATA(state, payload) {
@@ -93,6 +127,7 @@ export default {
     },
 
     getters: {
-        currentUser: state => state.user
+        currentUser: state => state.user,
+        token: state => state.token,
     }
 };

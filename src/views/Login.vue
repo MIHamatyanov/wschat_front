@@ -7,19 +7,19 @@
                         <span class="logo_text">WSChat</span>
                     </v-row>
                     <v-card class="py-12">
-                        <v-text-field
+<!--                        <v-text-field
                             class="mx-15"
                             label="Имя"
                             v-model="name"
-                        ></v-text-field>
+                        ></v-text-field>-->
                         <v-row no-gutters align="center" justify="center">
                             <v-btn
                                 class="mt-4"
-                                @click="login"
-                                width="150px"
+                                @click="loginGoogle"
+                                width="200px"
                                 color="primary"
                             >
-                                Войти
+                                Войти через Google
                             </v-btn>
                         </v-row>
                     </v-card>
@@ -43,12 +43,26 @@ export default {
         }
     },
 
+    async created() {
+        if (this.$route.query.code) {
+            await this.$store.dispatch("getGoogleAccessToken", this.$route.query.code);
+            this.$router.push({name: "Main"});
+        }
+    },
+
     methods: {
         login() {
             let user = {
                 name: this.name
             }
             this.$store.dispatch("login", user);
+        },
+
+        async loginGoogle() {
+            let response = await this.$store.dispatch("getGoogleLoginHref");
+            if (response.success) {
+                window.open(response.data, "_blank");
+            }
         }
     }
 }
