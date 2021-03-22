@@ -15,11 +15,32 @@
                         <v-row no-gutters align="center" justify="center">
                             <v-btn
                                 class="mt-4"
-                                @click="loginGoogle"
+                                @click="login('google')"
                                 width="200px"
                                 color="primary"
                             >
                                 Войти через Google
+                            </v-btn>
+                        </v-row>
+                        <v-row no-gutters align="center" justify="center">
+                            <v-btn
+                                class="mt-4"
+                                @click="login('github')"
+                                width="200px"
+                                color="primary"
+                            >
+                                Войти через GitHub
+                            </v-btn>
+                        </v-row>
+
+                        <v-row no-gutters align="center" justify="center">
+                            <v-btn
+                                class="mt-4"
+                                @click="login('yandex')"
+                                width="200px"
+                                color="primary"
+                            >
+                                Войти через Яндекс
                             </v-btn>
                         </v-row>
                     </v-card>
@@ -44,26 +65,25 @@ export default {
     },
 
     async created() {
-        if (this.$route.query.code) {
-            await this.$store.dispatch("getGoogleAccessToken", this.$route.query.code);
-            this.$router.push({name: "Main"});
+        if (this.$route.query.provider) {
+            if (this.$route.query.code) {
+                let data = {
+                    provider: this.$route.query.provider,
+                    code: this.$route.query.code
+                };
+                await this.$store.dispatch("getAccessToken", data);
+                this.$router.push({name: "Main"});
+            }
         }
     },
 
     methods: {
-        login() {
-            let user = {
-                name: this.name
-            }
-            this.$store.dispatch("login", user);
-        },
-
-        async loginGoogle() {
-            let response = await this.$store.dispatch("getGoogleLoginHref");
+        async login(provider) {
+            let response = await this.$store.dispatch("getLoginHref", provider);
             if (response.success) {
-                window.open(response.data, "_blank");
+                window.open(response.data, "_self");
             }
-        }
+        },
     }
 }
 </script>

@@ -5,7 +5,7 @@
             dense
             dark
         >
-            <v-toolbar-title>WSChat</v-toolbar-title>
+            <v-toolbar-title><a href="/main" class="logo_link">WSChat</a></v-toolbar-title>
 
             <v-spacer></v-spacer>
 
@@ -18,12 +18,12 @@
         <v-main>
             <div class="chat-container" ref="chatContainer">
                 <v-row no-gutters v-for="(message, index) in messages" :key="index"
-                       :justify="message.username === user.name ? 'end' : 'start'">
+                       :justify="message.ownerId === user.id ? 'end' : 'start'">
                     <v-card
                         class="py-2 px-3"
-                        :color="message.username === user.name ? 'blue-grey lighten-4' : 'blue-grey lighten-3'"
+                        :color="message.ownerId === user.id ? 'blue-grey lighten-4' : 'blue-grey lighten-3'"
                     >
-                        <span>{{ message.username }}: </span>
+                        <span>{{ message.ownerName }}: </span>
                         <span>{{ message.message }}</span>
                         <Media v-if="message.link" :message="message"/>
                     </v-card>
@@ -58,6 +58,7 @@ export default {
         this.user = this.$store.getters.currentUser;
         this.chatId = this.$route.params.id;
         this.connect();
+        this.getChatHistory();
     },
 
     beforeRouteLeave() {
@@ -69,6 +70,13 @@ export default {
             this.$store.dispatch("logout");
         },
 
+        async getChatHistory() {
+            let response = await this.$store.dispatch("getChatHistory", this.chatId);
+            if (response.success) {
+                this.messages = response.data;
+            }
+        },
+
         send() {
             if (this.stompClient && this.stompClient.connected) {
                 const msg = {
@@ -76,14 +84,16 @@ export default {
                     message: this.sendMessage
                 };
                 this.sendMessage = '';
-                this.stompClient.send(`/ws/send/${this.chatId}`, JSON.stringify(msg), {});
+                let token = this.$store.getters.token;
+                this.stompClient.send(`/ws/send/${this.chatId}`, JSON.stringify(msg), {Authorization: token});
             }
         },
         connect() {
             this.socket = new SockJS("http://localhost:8080/connect");
             this.stompClient = Stomp.over(this.socket);
+            let token = this.$store.getters.token;
             this.stompClient.connect(
-                {},
+                {Authorization: token},
                 // eslint-disable-next-line no-unused-vars
                 frame => {
                     this.connected = true;
@@ -178,5 +188,10 @@ export default {
     .chat-container .content {
         max-width: 60%;
     }
+}
+
+.logo_link {
+    color: #fff;
+    text-decoration: none;
 }
 </style>

@@ -20,9 +20,10 @@ export default {
             router.push({name: 'Main'});
         },
 
-        async getGoogleLoginHref() {
+        // eslint-disable-next-line no-unused-vars
+        async getLoginHref({context}, provider) {
             try {
-                let href = await rest.doGet(`/login`);
+                let href = await rest.doGet(`/login?provider=${provider}`);
                 return {
                     success: true,
                     data: href
@@ -35,10 +36,23 @@ export default {
             }
         },
 
-        async getGoogleAccessToken({commit}, token) {
+        async getAccessToken({commit}, data) {
             try {
-                let tokenData = await rest.doPost(`/login`, token);
+                let tokenData = await rest.doPost(`/login`, data);
                 commit('AUTH_SUCCESS', tokenData);
+                let userInfo = await rest.doGet("/user");
+                commit('SET_USER_NAME', userInfo);
+            } catch (error) {
+                return {
+                    success: false,
+                    data: error.response.data
+                }
+            }
+        },
+
+        async saveAccessToken({commit}, token) {
+            try {
+                commit('AUTH_SUCCESS', token);
                 let userInfo = await rest.doGet("/user");
                 commit('SET_USER_NAME', userInfo);
             } catch (error) {
@@ -71,15 +85,13 @@ export default {
             }
         },
 
-        async isAuthenticated() {
-           /* let authenticated = false;
+        async isAuthenticated({dispatch}) {
+            let authenticated = false;
             let tokenFromStorage = localStorage.getItem(constants.SESSION_STORAGE_TOKEN);
             if (tokenFromStorage) {
                 authenticated = await dispatch('loadCurrentUserData');
             }
-            return !!authenticated;*/
-            let tokenFromStorage = localStorage.getItem(constants.SESSION_STORAGE_TOKEN);
-            return !!tokenFromStorage;
+            return !!authenticated;
         },
 
 

@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import profile from '@/store/modules/profile.js';
 import longPollingChat from '@/store/modules/longPollingChat.js';
+import chat from '@/store/modules/chat.js';
 
 import createPersistedState from 'vuex-persistedstate'
 import * as Cookies from 'js-cookie'
@@ -12,7 +13,8 @@ export default new Vuex.Store({
     strict: true,
     modules: {
         profile,
-        longPollingChat
+        longPollingChat,
+        chat
     },
 
     state: {
